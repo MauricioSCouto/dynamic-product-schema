@@ -1,0 +1,448 @@
+openapi: 3.0.1
+info:
+  title: Schema de Produtos API
+  description: API relacionada ao mapeamento da estrutura de produtos de seguros baseada na variação de suas características por categoria.
+  termsOfService: none
+  contact:
+    email: none@none.com
+  version: beta
+servers:
+- url: dev
+tags:
+- name: schema
+  description: Dados relacionados aos schemas de produtos
+paths:
+  /schemas_produtos:
+    post:
+      tags:
+      - schema
+      summary: Cria um novo schema de produto
+      operationId: post/schema_produto
+      requestBody:
+        description: Payload para criação de um schema de produto
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchemaProdutoRequest'
+            examples:
+              SchemaProdutoRequest:
+                $ref: '#/components/examples/SchemaProdutoRequest'
+      responses:
+        201:
+          description: Payload de retorno referente a criação de um schema de produto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaProdutoResponse'
+              examples:
+                SchemaProdutoResponse:
+                  $ref: '#/components/examples/SchemaProdutoResponse'
+    get:
+      tags:
+        - schema
+      summary: Listagem de schemas de produto
+      operationId: get/schemas_produtos
+      parameters: 
+        - name: categoria_produto
+          description: Categoria de produto relacionado aos schemas a serem listados
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: versao_schema
+          description: Versão do schema a ser listado
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        200:
+          description: Listagem de schemas com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListaSchemaProdutoResponse'
+              examples:
+                ListaSchemaProdutoResponse:
+                  $ref: '#/components/examples/ListaSchemaProdutoResponse'
+  /schemas_produtos/{id_schema_produto}:
+    get:
+      tags:
+        - schema
+      summary: Detalhamento de um schema de produto
+      operationId: get/schema_produto
+      parameters:
+        - name: id_schema_produto
+          description: Identificador único de um schema
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Detalhamento de schema com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaProdutoResponse'
+              examples:
+                SchemaProdutoResponse:
+                  $ref: '#/components/examples/SchemaProdutoResponse'
+    patch:
+      tags:
+        - schema
+      summary: Alteração de um schema de produto
+      operationId: patch/schema_produto
+      parameters:
+      - name: id_schema_produto
+        description: Identificador único de um schema
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: Payload para alteração de um schema de produto
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchemaProdutoPatchRequest'
+            examples:
+              SchemaProdutoRequest:
+                $ref: '#/components/examples/SchemaProdutoPatchRequest'
+      responses:
+        200:
+          description: Versionamento de schema com sucesso de schema com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaProdutoResponse'
+              examples:
+                SchemaProdutoResponse:
+                  $ref: '#/components/examples/SchemaProdutoPatchResponse'
+  /versoes_schemas:
+    get:
+      tags:
+        - schema
+      summary: Listagem de versões para um schema de produto
+      operationId: get/versoes_schemas
+      parameters:
+        - name: categoria_produto
+          description: Categoria de produto relacionado aos schemas a serem listados
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Listagem de versões de um schema de produto com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListaVersaoSchemaProdutoResponse'
+              examples:
+                ListaVersaoSchemaProdutoResponse:
+                  $ref: '#/components/examples/ListaVersaoSchemaProdutoResponse'
+components:
+  schemas:
+    SchemaProdutoRequest:
+      type: object
+      properties:
+        categoria_produto:
+          description: Categoria dos produtos a serem associados ao schema
+          type: string
+          enum: [
+            vida,
+            residencial,
+            automovel
+          ]
+        atributos:
+          description: Dados esperados pelo schema a ser criado
+          type: array
+          items: 
+            $ref: '#/components/schemas/SchemaProdutoAtributoRequest'
+      required: 
+        - categoria_produto
+        - atributos
+    SchemaProdutoAtributoRequest:
+      type: object
+      properties:
+        nome_atributo:
+          description: Nome do atributo
+          type: string
+        descricao_atributo:
+          description: Descrição do atributo
+          type: string
+        tipo_valor_atributo:
+          description: Tipo do valor a ser preenchido para o atributo
+          type: string
+          enum: [
+            texto,
+            numerico,
+            booleano,
+            lista,
+            objeto
+          ]
+        obrigatoriedade_atributo:
+          description: Indicador de obrigatoriedade do preenchimento do atributo
+          type: boolean
+        sub_atributos: 
+          description: Sub atributos do atributo que está sendo mapeado (aplicável para tipo_valor_atributo = lista ou objeto)
+          type: array
+          items: 
+            $ref: '#/components/schemas/SchemaProdutoAtributoRequest'
+        exemplo_valor_atributo:
+          description: Exemplo do valor do atributo a ser preenchido
+          type: string
+      required:
+        - nome_atributo
+        - descricao_atributo
+        - tipo_valor_atributo
+        - obrigatoriedade_atributo
+    SchemaProdutoResponse:
+      description: Dados de retorno de um schema de produto
+      type: object
+      properties:
+        data:
+          description: Objeto encapsulando o payload de retorno
+          type: object
+          properties:
+            id_schema_produto:
+              description: Identificador único de um schema
+              type: string
+            versao_schema:
+              description: Versão do schema gerado
+              type: integer
+              format: int32
+            data_lancamento:
+              description: Data de lançamento/criação do schema
+              type: string
+            categoria_produto:
+              description: Categoria dos produtos associado ao schema
+              type: string
+            atributos:
+              description: Dados esperados pelo schema a ser criado
+              type: array
+              items: 
+                $ref: '#/components/schemas/SchemaProdutoAtributoRequest'
+          required: 
+            - id_schema_produto
+            - versao_schema
+            - data_lancamento
+            - categoria_produto
+            - atributos
+    ListaSchemaProdutoResponse:
+      description: Payload de retorno para a listagem de schemas
+      type: object
+      properties:
+        data:
+          description: Objeto encapsulando o payload de retorno
+          type: array
+          items:
+            $ref: '#/components/schemas/SchemaProdutoResponse'
+    SchemaProdutoPatchRequest:
+      type: object
+      properties:
+        atributos:
+          description: Dados esperados pelo schema a ser criado
+          type: array
+          items: 
+            $ref: '#/components/schemas/SchemaProdutoAtributoRequest'
+      required:
+        - atributos
+    ListaVersaoSchemaProdutoResponse:
+      description: Payload de retorno para a listagem de versões de schema de produto
+      type: object
+      properties:
+        data:
+          description: Objeto encapsulando o payload de retorno
+          type: array
+          items:
+            type: object
+            properties: 
+              versao_schema:
+                description: Número da versão do schema de produto
+                type: integer
+                format: int32
+              categoria_produto:
+                description: Categoria de produtos associados ao schema
+                type: string
+              data_lancamento:
+                description: Data de lançamento/criação do schema
+                type: string
+              ultima_versao:
+                description: Indicador se a versão é a última em relação aos schemas de produto
+                type: boolean
+  examples:
+    SchemaProdutoRequest:
+      summary: application/json
+      description: Exemplo de payload para criação de um schema de produto
+      value:
+        {
+          "categoria_produto": "vida",
+          "atributos": [
+            {
+              "nome_atributo": "nome_produto",
+              "descricao_atributo": "Campo necessário para mapeamento do nome do produto",
+              "tipo_valor_atributo": "texto",
+              "obrigatoriedade_atributo": true,
+              "exemplo": "Seguro Vida 60+"
+            }  
+          ]
+        }
+    SchemaProdutoResponse:
+      summary: Schema Produto Response
+      description: Exemplo de payload de retorno da criação de um schema de produto
+      value:
+        {
+          "data": {
+            "id_schema_produto": "2c543fe2-f5e7-45f6-9922-139dec2d8985",
+            "versao_schema": 1,
+            "categoria_produto": "vida",
+            "data_lancamento": "2022-03-03 18:00:00",
+            "atributos": [
+              {
+                "nome_atributo": "nome_produto",
+                "descricao_atributo": "Campo necessário para mapeamento do nome do produto",
+                "tipo_valor_atributo": "texto",
+                "obrigatoriedade_atributo": true,
+                "exemplo": "Seguro Vida 60+"
+              }  
+            ]
+          }
+        }
+    ListaSchemaProdutoResponse:
+      summary: Listagem de Schemas de Produto
+      description: Exemplo de payload de listagem de schemas de produto
+      value:
+        {
+          "data": [{
+            "id_schema_produto": "2c543fe2-f5e7-45f6-9922-139dec2d8985",
+            "versao_schema": 1,
+            "categoria_produto": "vida",
+            "data_lancamento": "2022-03-03 18:00:00",
+            "atributos": [
+              {
+                "nome_atributo": "nome_produto",
+                "descricao_atributo": "Campo necessário para mapeamento do nome do produto",
+                "tipo_valor_atributo": "texto",
+                "obrigatoriedade_atributo": true,
+                "exemplo": "Seguro Vida 60+"
+              }  
+            ]
+          }]
+        }
+    SchemaProdutoPatchRequest:
+      summary: application/json
+      description: Exemplo de payload para alteração de um schema de produto
+      value:
+        {
+          "atributos": [
+            {
+              "nome_atributo": "nome_produto",
+              "descricao_atributo": "Nome comercial do produto",
+              "tipo_valor_atributo": "texto",
+              "obrigatoriedade_atributo": true,
+              "exemplo": "Seguro Vida 60+"
+            },
+            {
+              "nome_atributo": "numero_processo_susep",
+              "descricao_atributo": "Número de identificação do produto junto ao órgão regulador (SUSEP)",
+              "tipo_valor_atributo": "texto",
+              "obrigatoriedade_atributo": true,
+              "exemplo": "0495839-23/2022"
+            },
+            {
+              "nome_atributo": "coberturas",
+              "descricao_atributo": "Coberturas relativas ao produto",
+              "tipo_valor_atributo": "lista",
+              "obrigatoriedade_atributo": true,
+              "sub_atributos": [
+                {
+                  "nome_atributo": "id_cobertura",
+                  "descricao_atributo": "Identificador da cobertura",
+                  "tipo_valor_atributo": "texto",
+                  "obrigatoriedade_atributo": true,
+                  "exemplo": "49bc723e-67bc-42e6-a3b0-3991e1d916b8"
+                },
+                {
+                  "nome_atributo": "obrigatoriedade_cobertura",
+                  "descricao_atributo": "Indicador de obrigatoriedade da contratação da cobertura",
+                  "tipo_valor_atributo": "booleano",
+                  "obrigatoriedade_atributo": true,
+                  "exemplo": true
+                }
+              ]
+            }
+          ]
+        }
+    SchemaProdutoPatchResponse:
+      summary: Schema Produto Patch Response
+      description: Exemplo de payload de retorno da alteração de um schema de produto
+      value:
+        {
+          "data": {
+            "id_schema_produto": "2c543fe2-f5e7-45f6-9922-139dec2d8985",
+            "versao_schema": 2,
+            "categoria_produto": "vida",
+            "data_lancamento": "2022-04-03 18:00:00",
+            "atributos": [
+              {
+                "nome_atributo": "nome_produto",
+                "descricao_atributo": "Nome comercial do produto",
+                "tipo_valor_atributo": "texto",
+                "obrigatoriedade_atributo": true,
+                "exemplo": "Seguro Vida 60+"
+              },
+              {
+                "nome_atributo": "numero_processo_susep",
+                "descricao_atributo": "Número de identificação do produto junto ao órgão regulador (SUSEP)",
+                "tipo_valor_atributo": "texto",
+                "obrigatoriedade_atributo": true,
+                "exemplo": "0495839-23/2022"
+              },
+              {
+                "nome_atributo": "coberturas",
+                "descricao_atributo": "Coberturas relativas ao produto",
+                "tipo_valor_atributo": "lista",
+                "obrigatoriedade_atributo": true,
+                "sub_atributos": [
+                  {
+                    "nome_atributo": "id_cobertura",
+                    "descricao_atributo": "Identificador da cobertura",
+                    "tipo_valor_atributo": "texto",
+                    "obrigatoriedade_atributo": true,
+                    "exemplo": "49bc723e-67bc-42e6-a3b0-3991e1d916b8"
+                  },
+                  {
+                    "nome_atributo": "obrigatoriedade_cobertura",
+                    "descricao_atributo": "Indicador de obrigatoriedade da contratação da cobertura",
+                    "tipo_valor_atributo": "booleano",
+                    "obrigatoriedade_atributo": true,
+                    "exemplo": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+    ListaVersaoSchemaProdutoResponse:
+      summary: Listagem de versões de schema
+      description: Exemplo de payload de listagem de versões de schema
+      value:
+        {
+          "data": [
+            {
+              "versao_schema": 2,
+              "categoria_produto": "vida",
+              "data_lancamento": "2022-04-03 18:00:00",
+              "ultima_versao": true
+            },
+            {
+              "versao_schema": 1,
+              "categoria_produto": "vida",
+              "data_lancamento": "2022-03-03 18:00:00",
+              "ultima_versao": false
+            },
+          ]
+        }
